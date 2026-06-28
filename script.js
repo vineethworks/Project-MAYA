@@ -73,7 +73,7 @@ for (let i = 0; i < 20; i++) {
     const z = (Math.random() - 0.5) * 18;
 
     trunk.position.set(x, 1, z);
-
+scene.add(trunk);
     trees.push(trunk);
 
     // Leaves
@@ -85,7 +85,7 @@ for (let i = 0; i < 20; i++) {
     const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
 
     leaves.position.set(x, 2.5, z);
-
+scene.add(leaves);
     trees.push(leaves);
 
 }
