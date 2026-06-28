@@ -167,17 +167,14 @@ if (keys["d"]) {
     player.position.x += speed;
     player.rotation.y = -Math.PI / 2;
 }
-    // Camera Follow
+    // 🎥 Smooth Camera Follow
 
-camera.position.x = player.position.x;
+camera.position.x += (player.position.x - camera.position.x) * 0.08;
 
-camera.position.z = player.position.z + 8;
+camera.position.y += ((player.position.y + 6) - camera.position.y) * 0.08;
 
-camera.position.y = player.position.y + 6;
+camera.position.z += ((player.position.z + 8) - camera.position.z) * 0.08;
 
 camera.lookAt(player.position);
-    renderer.render(scene,camera);
-
-}
 
 animate();
