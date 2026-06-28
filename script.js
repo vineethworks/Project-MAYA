@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Sky } from "three/addons/objects/Sky.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+import { PMREMGenerator } from "three/addons/pmrem/PMREMGenerator.js";
 console.log("================================");
 console.log("      PROJECT MAYA v0.1");
 console.log("      THE BEGINNING");
@@ -48,6 +50,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+// Prepare PMREM generator + RGBE loader for a real-world HDR sky (IBL)
+const pmremGenerator = new PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+
 // Add a clock for frame-rate independent movement
 const clock = new THREE.Clock();
 
@@ -73,6 +79,27 @@ const phi = THREE.MathUtils.degToRad(90 - sunAltitude);
 const theta = THREE.MathUtils.degToRad(sunAzimuth);
 sunPosition.setFromSphericalCoords(1, phi, theta);
 skyUniforms["sunPosition"].value.copy(sunPosition);
+
+// Try to load a real-world HDRI for environment lighting (image-based lighting)
+// If this fails, the Sky shader will remain as a fallback.
+new RGBELoader()
+    .setDataType(THREE.UnsignedByteType)
+    .load(
+        'https://threejs.org/examples/textures/equirectangular/royal_esplanade_1k.hdr',
+        (hdrEquirect) => {
+            const envMap = pmremGenerator.fromEquirectangular(hdrEquirect).texture;
+            scene.environment = envMap; // PBR reflections / IBL
+            scene.background = envMap; // use the HDR as the background
+            sky.visible = false; // hide the procedural Sky when HDR is used
+            hdrEquirect.dispose();
+            pmremGenerator.dispose();
+            console.log('HDR environment loaded and applied');
+        },
+        undefined,
+        (err) => {
+            console.warn('HDR load failed, keeping Sky shader fallback', err);
+        }
+    );
 
 // Match fog color with sky tint for smooth blending
 const skyColor = new THREE.Color().setHSL(0.58, 0.6, 0.85); // light bluish
