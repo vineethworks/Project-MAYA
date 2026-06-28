@@ -230,6 +230,12 @@ scene.add(player);
 const loader = new GLTFLoader();
 let mayaCharacter = null;
 let mixer = null;
+
+// Animation action state
+const actions = {};
+let activeAction = null;
+let activeActionName = "";
+
 loader.load(
 
     "assets/models/maya.glb",
@@ -239,12 +245,64 @@ loader.load(
         const maya = gltf.scene;
         mayaCharacter = maya;
         mixer = new THREE.AnimationMixer(mayaCharacter);
-        if (gltf.animations.length > 0) {
 
-            const action = mixer.clipAction(gltf.animations[0]);
-            action.play();
+        // Discover and prepare animation clips
+        const clips = gltf.animations || [];
+        console.log("GLTF clips:", clips.map(c => c.name));
 
+        // Helper to find clip by regex/name
+        function findClipByRegex(regex) {
+            return clips.find(c => regex.test(c.name));
         }
+
+        const clipIdle = findClipByRegex(/idle/i) || clips[0] || null;
+        const clipWalk = findClipByRegex(/walk/i) || findClipByRegex(/locomotion/i) || null;
+        const clipRun = findClipByRegex(/run/i) || findClipByRegex(/sprint/i) || null;
+        const clipJump = findClipByRegex(/jump|leap|fall/i) || null;
+
+        // Create actions for available clips
+        if (clipIdle) {
+            actions.Idle = mixer.clipAction(clipIdle);
+            actions.Idle.play();
+            activeAction = actions.Idle;
+            activeActionName = 'Idle';
+        }
+        if (clipWalk) {
+            actions.Walk = mixer.clipAction(clipWalk);
+            actions.Walk.setLoop(THREE.LoopRepeat);
+        }
+        if (clipRun) {
+            actions.Run = mixer.clipAction(clipRun);
+            actions.Run.setLoop(THREE.LoopRepeat);
+        }
+        if (clipJump) {
+            actions.Jump = mixer.clipAction(clipJump);
+            actions.Jump.setLoop(THREE.LoopOnce);
+            actions.Jump.clampWhenFinished = true;
+        }
+
+        // If only one clip exists, ensure it's accessible as Idle/Walk for graceful fallback
+        if (clips.length === 1) {
+            if (!actions.Walk) actions.Walk = actions.Idle;
+            if (!actions.Run) actions.Run = actions.Idle;
+        }
+
+        // Event: when a non-looping action (like Jump) finishes, revert to appropriate action
+        mixer.addEventListener('finished', (e) => {
+            // if jump finished, pick appropriate next action
+            if (activeActionName === 'Jump') {
+                const moving = keys['w'] || keys['a'] || keys['s'] || keys['d'];
+                const next = moving ? (keys['shift'] ? (actions.Run ? 'Run' : 'Walk') : 'Walk') : 'Idle';
+                if (actions[next]) {
+                    const toAction = actions[next];
+                    toAction.reset().play();
+                    activeAction && activeAction.crossFadeTo(toAction, 0.2, false);
+                    activeAction = toAction;
+                    activeActionName = next;
+                }
+            }
+        });
+
         maya.scale.set(1, 1, 1);
         maya.rotation.y = Math.PI;
         maya.position.set(0, 0, 0);
@@ -314,11 +372,13 @@ function animate(){
     // Use clock to make movement frame-rate independent
     const delta = Math.max(0.0001, clock.getDelta());
 
+    // Update mixer for animations
+    if (mixer) mixer.update(delta);
+
     const baseSpeed = keys["shift"] ? 0.16 : 0.08;
     // Keep same per-frame feel at ~60 FPS by scaling with (delta * 60)
     const frameScale = delta * 60;
     const speed = baseSpeed * frameScale;
-    console.log(baseSpeed);
 
     if (keys["w"]) {
         player.position.z -= speed;
@@ -379,6 +439,34 @@ function animate(){
 
         mayaCharacter.rotation.y = player.rotation.y + Math.PI;
     }
+
+    // Animation state selection and smooth crossfades
+    if (mixer && Object.keys(actions).length > 0) {
+        // Decide desired action
+        let desired = 'Idle';
+        const moving = keys['w'] || keys['a'] || keys['s'] || keys['d'];
+        if (isJumping && actions['Jump']) {
+            desired = 'Jump';
+        } else if (moving) {
+            if (keys['shift']) desired = (actions['Run'] ? 'Run' : 'Walk');
+            else desired = (actions['Walk'] ? 'Walk' : 'Idle');
+        }
+
+        if (desired !== activeActionName) {
+            const fade = 0.2;
+            const toAction = actions[desired];
+            if (toAction) {
+                // Start the target action and crossfade from active
+                toAction.reset().play();
+                if (activeAction && activeAction !== toAction) {
+                    activeAction.crossFadeTo(toAction, fade, false);
+                }
+                activeAction = toAction;
+                activeActionName = desired;
+            }
+        }
+    }
+
     if (player.position.y <= 1) {
 
         player.position.y = 1;
