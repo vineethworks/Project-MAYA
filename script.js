@@ -127,7 +127,32 @@ const player = new THREE.Mesh(playerGeometry, playerMaterial);
 player.position.set(0, 1, 0);
 
 scene.add(player);
+const loader = new GLTFLoader();
+loader.load(
 
+    "assets/models/maya.glb",
+
+    function (gltf) {
+
+        const maya = gltf.scene;
+
+        maya.scale.set(1, 1, 1);
+
+        maya.position.set(0, 1, 0);
+
+        scene.add(maya);
+
+    },
+
+    undefined,
+
+    function (error) {
+
+        console.error("Model Load Error:", error);
+
+    }
+
+);
 // Keyboard Input
 
 const keys = {};
