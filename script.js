@@ -17,7 +17,7 @@ window.onload = () => {
 // Scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-
+scene.fog = new THREE.Fog(0x87ceeb, 15, 35);
 // Camera
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -87,6 +87,31 @@ for (let i = 0; i < 20; i++) {
     leaves.position.set(x, 2.5, z);
 
     scene.add(leaves);
+
+}
+// 🪨 Rocks
+for (let i = 0; i < 15; i++) {
+
+    const rockGeometry = new THREE.DodecahedronGeometry(
+        Math.random() * 0.3 + 0.2
+    );
+
+    const rockMaterial = new THREE.MeshStandardMaterial({
+        color: 0x808080
+    });
+
+    const rock = new THREE.Mesh(
+        rockGeometry,
+        rockMaterial
+    );
+
+    rock.position.set(
+        (Math.random() - 0.5) * 18,
+        0.25,
+        (Math.random() - 0.5) * 18
+    );
+
+    scene.add(rock);
 
 }
 // Camera Position
