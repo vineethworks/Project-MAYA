@@ -151,10 +151,16 @@ window.addEventListener("mousemove", (event) => {
 
     cameraAngle += event.movementX * 0.003;
 
+    cameraPitch -= event.movementY * 0.002;
+
+    cameraPitch = Math.max(-0.8, Math.min(0.8, cameraPitch));
+
+});
 });
 // Camera Rotation
 
 let cameraAngle = 0;
+let cameraPitch = 0;
 // Camera Position
 camera.position.set(0, 8, 15);
 camera.lookAt(0, 0, 0);
