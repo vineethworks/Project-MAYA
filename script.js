@@ -1,3 +1,4 @@
+import * as THREE from "three";
 console.log("================================");
 console.log("      PROJECT MAYA v0.1");
 console.log("      THE BEGINNING");
@@ -12,7 +13,6 @@ window.onload = () => {
     },2000);
 
 };
-import * as THREE from "three";
 
 // Scene
 const scene = new THREE.Scene();
