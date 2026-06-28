@@ -57,16 +57,6 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 2);
 sunLight.position.set(5, 10, 5);
 
 scene.add(sunLight);
-// Tree Trunk
-const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.2, 2);
-const trunkMaterial = new THREE.MeshStandardMaterial({
-    color: 0x8B4513
-});
-
-const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-trunk.position.set(0, 1, -3);
-
-scene.add(trunk);
 
 // 🌳 Create Forest
 for (let i = 0; i < 20; i++) {
@@ -100,10 +90,8 @@ for (let i = 0; i < 20; i++) {
 
 }
 // Camera Position
-camera.position.set(0,5,8);
-
-camera.lookAt(0,0,0);
-
+camera.position.set(0, 8, 15);
+camera.lookAt(0, 0, 0);
 // Animation Loop
 function animate(){
 
