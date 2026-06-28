@@ -254,8 +254,7 @@ if (mayaCharacter) {
 }
     if (mayaCharacter) {
 
-    mayaCharacter.rotation.y = player.rotation.y;
-
+    mayaCharacter.rotation.y = player.rotation.y + Math.PI;
 }
 if (player.position.y <= 1) {
 
