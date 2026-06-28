@@ -112,6 +112,19 @@ for (let i = 0; i < 15; i++) {
     );
 
     scene.add(rock);
+    // 👤 Temporary Player
+
+const playerGeometry = new THREE.CapsuleGeometry(0.4, 1.2, 8, 16);
+
+const playerMaterial = new THREE.MeshStandardMaterial({
+    color: 0x3366ff
+});
+
+const player = new THREE.Mesh(playerGeometry, playerMaterial);
+
+player.position.set(0, 1, 0);
+
+scene.add(player);
 
 }
 // Camera Position
