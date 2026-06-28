@@ -156,7 +156,6 @@ window.addEventListener("mousemove", (event) => {
     cameraPitch = Math.max(-0.8, Math.min(0.8, cameraPitch));
 
 });
-});
 // Camera Rotation
 
 let cameraAngle = 0;
