@@ -177,4 +177,7 @@ camera.position.z += ((player.position.z + 8) - camera.position.z) * 0.08;
 
 camera.lookAt(player.position);
 
+renderer.render(scene, camera);
+}
+
 animate();
