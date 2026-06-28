@@ -35,6 +35,9 @@ const renderer = new THREE.WebGLRenderer({
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+// Add a clock for frame-rate independent movement
+const clock = new THREE.Clock();
+
 // Ground
 const geometry = new THREE.PlaneGeometry(20,20);
 const material = new THREE.MeshStandardMaterial({
@@ -112,7 +115,7 @@ for (let i = 0; i < 15; i++) {
         (Math.random() - 0.5) * 18
     );
 
-    scene.add(rock);}
+    scene.add(rock);} 
 
 // 👤 Temporary Player
 
@@ -203,8 +206,14 @@ camera.lookAt(0, 0, 0);
 function animate(){
 
     requestAnimationFrame(animate);
-const speed = keys["shift"] ? 0.16 : 0.08;
-    console.log(speed);
+    // Use clock to make movement frame-rate independent
+    const delta = Math.max(0.0001, clock.getDelta());
+
+const baseSpeed = keys["shift"] ? 0.16 : 0.08;
+// Keep same per-frame feel at ~60 FPS by scaling with (delta * 60)
+const frameScale = delta * 60;
+const speed = baseSpeed * frameScale;
+    console.log(baseSpeed);
 
 if (keys["w"]) {
     player.position.z -= speed;
