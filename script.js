@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { Sky } from "three/addons/objects/Sky.js";
 console.log("================================");
 console.log("      PROJECT MAYA v0.1");
 console.log("      THE BEGINNING");
@@ -17,8 +18,12 @@ window.onload = () => {
 
 // Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 15, 35);
+// We'll use a Sky shader for a realistic sky instead of a flat color
+// (background will be provided by the Sky mesh)
+
+// Add subtle exponential fog for atmospheric haze (matches sky feel)
+scene.fog = new THREE.FogExp2(0xbfdfff, 0.0025); // very light fog for depth
+
 // Camera
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -33,6 +38,11 @@ const renderer = new THREE.WebGLRenderer({
     antialias: true
 });
 
+// Better color handling and tonemapping for more realistic colors
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 // Enable soft shadows (moderate settings for browser performance)
 renderer.shadowMap.enabled = true;
@@ -41,48 +51,108 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 // Add a clock for frame-rate independent movement
 const clock = new THREE.Clock();
 
-// Ground
-const geometry = new THREE.PlaneGeometry(20,20);
-const material = new THREE.MeshStandardMaterial({
-    color:0x228B22,
-    side:THREE.DoubleSide
+// ---------- SKY (physically plausible) ----------
+const sky = new Sky();
+sky.scale.setScalar(450000);
+scene.add(sky);
+
+// Sun position vector used by both Sky shader and directional light
+const sunPosition = new THREE.Vector3();
+
+// Sky shader parameters
+const skyUniforms = sky.material.uniforms;
+skyUniforms["turbidity"].value = 8;
+skyUniforms["rayleigh"].value = 2.0;
+skyUniforms["mieCoefficient"].value = 0.005;
+skyUniforms["mieDirectionalG"].value = 0.8;
+
+// Set a pleasant sun altitude/azimuth
+const sunAltitude = 45; // degrees above horizon
+const sunAzimuth = 180; // degrees, 180 = behind camera initially
+const phi = THREE.MathUtils.degToRad(90 - sunAltitude);
+const theta = THREE.MathUtils.degToRad(sunAzimuth);
+sunPosition.setFromSphericalCoords(1, phi, theta);
+skyUniforms["sunPosition"].value.copy(sunPosition);
+
+// Match fog color with sky tint for smooth blending
+const skyColor = new THREE.Color().setHSL(0.58, 0.6, 0.85); // light bluish
+scene.fog.color.copy(skyColor);
+
+// ---------- TEXTURES / GROUND MATERIAL ----------
+const textureLoader = new THREE.TextureLoader();
+
+// High-quality tileable grass texture (hosted on threejs examples site)
+const grassTexture = textureLoader.load('https://threejs.org/examples/textures/grasslight-big.jpg');
+grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
+grassTexture.repeat.set(8, 8);
+grassTexture.encoding = THREE.sRGBEncoding;
+
+// Create a small noise canvas to use as a roughness map (adds dirt/variation without external assets)
+function createNoiseTexture(size = 128) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(size, size);
+    for (let i = 0; i < size * size; i++) {
+        const v = Math.floor(Math.random() * 255);
+        const idx = i * 4;
+        // grayscale noise
+        imageData.data[idx] = v;
+        imageData.data[idx + 1] = v;
+        imageData.data[idx + 2] = v;
+        imageData.data[idx + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(16, 16);
+    return tex;
+}
+const noiseTexture = createNoiseTexture(128);
+
+// Ground geometry and PBR-like material using the tiled grass texture and noise roughness
+const geometry = new THREE.PlaneGeometry(20, 20, 1, 1);
+const groundMaterial = new THREE.MeshStandardMaterial({
+    map: grassTexture,
+    roughnessMap: noiseTexture,
+    roughness: 1.0,
+    metalness: 0.0,
+    side: THREE.DoubleSide
 });
 
-const ground = new THREE.Mesh(geometry,material);
-
-ground.rotation.x = -Math.PI/2;
-ground.receiveShadow = true; // receive shadows from sun and trees
-
+const ground = new THREE.Mesh(geometry, groundMaterial);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true; // receive shadows from sun and scene objects
 scene.add(ground);
-// Soft ambient illumination using HemisphereLight
+
+// Ambient Light + Hemisphere light for soft fill (preserve daylight feeling)
 const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x443322, 0.55); // soft sky / ground colors
 scene.add(hemiLight);
-// Subtle fill ambient to keep characters visible in deep shade
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
 scene.add(ambientLight);
 
-// Sun Light (directional) - warm color and caster of soft shadows
+// Sun / Directional light - warm, shadow caster (keep parameters tuned for web)
 const sunLight = new THREE.DirectionalLight(0xfff0c8, 1.6);
-
-sunLight.position.set(5, 10, 5);
+// Position will be aligned to sky's sun position below
 sunLight.castShadow = true;
-// Shadow map resolution (1024 keeps quality reasonable in browser)
 sunLight.shadow.mapSize.width = 1024;
 sunLight.shadow.mapSize.height = 1024;
-// Tweak camera bounds for the directional light (orthographic) to cover the visible world
 const d = 15;
 sunLight.shadow.camera.left = -d;
 sunLight.shadow.camera.right = d;
 sunLight.shadow.camera.top = d;
 sunLight.shadow.camera.bottom = -d;
 sunLight.shadow.camera.near = 0.5;
-sunLight.shadow.camera.far = 50;
-// Softness
+sunLight.shadow.camera.far = 200;
 if (sunLight.shadow.radius !== undefined) sunLight.shadow.radius = 4;
-
 scene.add(sunLight);
+
+// Align directional light position with Sky's sun vector and scale appropriately
+sunLight.position.copy(sunPosition).multiplyScalar(30);
+
+// Store trees/rocks for later visual upgrades but keep them unchanged now
 const trees = [];
-// 🌳 Create Forest
+// 🌳 Create Forest (unchanged shapes, only now set shadow flags)
 for (let i = 0; i < 20; i++) {
 
     // Tree Trunk
@@ -99,7 +169,7 @@ for (let i = 0; i < 20; i++) {
     trunk.position.set(x, 1, z);
     trunk.castShadow = true;
     trunk.receiveShadow = true;
-scene.add(trunk);
+    scene.add(trunk);
     trees.push(trunk);
 
     // Leaves
@@ -113,11 +183,11 @@ scene.add(trunk);
     leaves.position.set(x, 2.5, z);
     leaves.castShadow = true;
     leaves.receiveShadow = true;
-scene.add(leaves);
+    scene.add(leaves);
     trees.push(leaves);
 
 }
-// 🪨 Rocks
+// 🪨 Rocks (same geometry but with shadows)
 for (let i = 0; i < 15; i++) {
 
     const rockGeometry = new THREE.DodecahedronGeometry(
@@ -140,7 +210,8 @@ for (let i = 0; i < 15; i++) {
     );
     rock.castShadow = true;
     rock.receiveShadow = true;
-    scene.add(rock);} 
+    scene.add(rock);
+}
 
 // 👤 Temporary Player
 
@@ -166,26 +237,27 @@ loader.load(
     function (gltf) {
 
         const maya = gltf.scene;
-mayaCharacter = maya;
+        mayaCharacter = maya;
         mixer = new THREE.AnimationMixer(mayaCharacter);
         if (gltf.animations.length > 0) {
 
-    const action = mixer.clipAction(gltf.animations[0]);
+            const action = mixer.clipAction(gltf.animations[0]);
+            action.play();
 
-    action.play();
-
-}
+        }
         maya.scale.set(1, 1, 1);
-maya.rotation.y = Math.PI;
+        maya.rotation.y = Math.PI;
         maya.position.set(0, 0, 0);
-// Ensure character meshes cast and receive shadows
-maya.traverse((child) => {
-    if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-    }
-});
-player.visible = false;
+        // Ensure character meshes cast and receive shadows
+        maya.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+                // ensure correct color encoding for GLTF textures
+                if (child.material && child.material.map) child.material.map.encoding = THREE.sRGBEncoding;
+            }
+        });
+        player.visible = false;
         scene.add(maya);
 
     },
@@ -206,9 +278,9 @@ const keys = {};
 window.addEventListener("keydown", (event) => {
     keys[event.key.toLowerCase()] = true;
     if (event.code === "Space" && !isJumping) {
-    velocityY = jumpForce;
-    isJumping = true;
-}
+        velocityY = jumpForce;
+        isJumping = true;
+    }
 });
 
 window.addEventListener("keyup", (event) => {
@@ -242,81 +314,81 @@ function animate(){
     // Use clock to make movement frame-rate independent
     const delta = Math.max(0.0001, clock.getDelta());
 
-const baseSpeed = keys["shift"] ? 0.16 : 0.08;
-// Keep same per-frame feel at ~60 FPS by scaling with (delta * 60)
-const frameScale = delta * 60;
-const speed = baseSpeed * frameScale;
+    const baseSpeed = keys["shift"] ? 0.16 : 0.08;
+    // Keep same per-frame feel at ~60 FPS by scaling with (delta * 60)
+    const frameScale = delta * 60;
+    const speed = baseSpeed * frameScale;
     console.log(baseSpeed);
 
-if (keys["w"]) {
-    player.position.z -= speed;
-    player.rotation.y = 0;
-}
+    if (keys["w"]) {
+        player.position.z -= speed;
+        player.rotation.y = 0;
+    }
 
-if (keys["s"]) {
-    player.position.z += speed;
-    player.rotation.y = Math.PI;
-}
+    if (keys["s"]) {
+        player.position.z += speed;
+        player.rotation.y = Math.PI;
+    }
 
-if (keys["a"]) {
-    player.position.x -= speed;
-    player.rotation.y = Math.PI / 2;
-}
+    if (keys["a"]) {
+        player.position.x -= speed;
+        player.rotation.y = Math.PI / 2;
+    }
 
-if (keys["d"]) {
-    player.position.x += speed;
-    player.rotation.y = -Math.PI / 2;
-}
-// 🌍 World Boundary
+    if (keys["d"]) {
+        player.position.x += speed;
+        player.rotation.y = -Math.PI / 2;
+    }
+    // 🌍 World Boundary
 
-player.position.x = Math.max(-9, Math.min(9, player.position.x));
+    player.position.x = Math.max(-9, Math.min(9, player.position.x));
 
-player.position.z = Math.max(-9, Math.min(9, player.position.z));
+    player.position.z = Math.max(-9, Math.min(9, player.position.z));
     // 🎥 Smooth Camera Follow
     
 
-const distance = 8;
+    const distance = 8;
 
-camera.position.x += (
-    (player.position.x + Math.sin(cameraAngle) * distance) -
-    camera.position.x
-) * 0.08;
+    camera.position.x += (
+        (player.position.x + Math.sin(cameraAngle) * distance) -
+        camera.position.x
+    ) * 0.08;
 
-camera.position.z += (
-    (player.position.z + Math.cos(cameraAngle) * distance) -
-    camera.position.z
-) * 0.08;
+    camera.position.z += (
+        (player.position.z + Math.cos(cameraAngle) * distance) -
+        camera.position.z
+    ) * 0.08;
 
-camera.position.y += (
-    (player.position.y + 6 + cameraPitch * 5) -
-    camera.position.y
-) * 0.08;
+    camera.position.y += (
+        (player.position.y + 6 + cameraPitch * 5) -
+        camera.position.y
+    ) * 0.08;
 
-camera.lookAt(player.position);
-// Jump Physics
+    camera.lookAt(player.position);
+    // Jump Physics
 
-velocityY -= gravity;
+    velocityY -= gravity;
 
-player.position.y += velocityY;
-if (mayaCharacter) {
-
-    mayaCharacter.position.copy(player.position);
-
-}
+    player.position.y += velocityY;
     if (mayaCharacter) {
 
-    mayaCharacter.rotation.y = player.rotation.y + Math.PI;
-}
-if (player.position.y <= 1) {
+        mayaCharacter.position.copy(player.position);
 
-    player.position.y = 1;
+    }
+    if (mayaCharacter) {
 
-    velocityY = 0;
+        mayaCharacter.rotation.y = player.rotation.y + Math.PI;
+    }
+    if (player.position.y <= 1) {
 
-    isJumping = false;
+        player.position.y = 1;
 
-}
-renderer.render(scene, camera);
+        velocityY = 0;
+
+        isJumping = false;
+
+    }
+    renderer.render(scene, camera);
 }
 
 animate();
