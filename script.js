@@ -57,7 +57,7 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 2);
 sunLight.position.set(5, 10, 5);
 
 scene.add(sunLight);
-
+const trees = [];
 // 🌳 Create Forest
 for (let i = 0; i < 20; i++) {
 
@@ -74,7 +74,7 @@ for (let i = 0; i < 20; i++) {
 
     trunk.position.set(x, 1, z);
 
-    scene.add(trunk);
+    trees.push(trunk);
 
     // Leaves
     const leavesGeometry = new THREE.SphereGeometry(1, 32, 32);
@@ -86,7 +86,7 @@ for (let i = 0; i < 20; i++) {
 
     leaves.position.set(x, 2.5, z);
 
-    scene.add(leaves);
+    trees.push(leaves);
 
 }
 // 🪨 Rocks
