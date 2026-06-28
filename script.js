@@ -147,6 +147,14 @@ let isJumping = false;
 
 const gravity = 0.015;
 const jumpForce = 0.28;
+window.addEventListener("mousemove", (event) => {
+
+    cameraAngle += event.movementX * 0.003;
+
+});
+// Camera Rotation
+
+let cameraAngle = 0;
 // Camera Position
 camera.position.set(0, 8, 15);
 camera.lookAt(0, 0, 0);
