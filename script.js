@@ -128,6 +128,7 @@ player.position.set(0, 1, 0);
 
 scene.add(player);
 const loader = new GLTFLoader();
+let mayaCharacter;
 loader.load(
 
     "assets/models/maya.glb",
@@ -135,7 +136,7 @@ loader.load(
     function (gltf) {
 
         const maya = gltf.scene;
-
+mayaCharacter = maya;
         maya.scale.set(1, 1, 1);
 
         maya.position.set(0, 0, 0);
@@ -246,7 +247,11 @@ camera.lookAt(player.position);
 velocityY -= gravity;
 
 player.position.y += velocityY;
+if (mayaCharacter) {
 
+    mayaCharacter.position.copy(player.position);
+
+}
 if (player.position.y <= 1) {
 
     player.position.y = 1;
