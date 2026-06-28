@@ -112,7 +112,8 @@ for (let i = 0; i < 15; i++) {
     );
 
     scene.add(rock);
-    // 👤 Temporary Player
+}
+// 👤 Temporary Player
 
 const playerGeometry = new THREE.CapsuleGeometry(0.4, 1.2, 8, 16);
 
@@ -123,7 +124,11 @@ const playerMaterial = new THREE.MeshStandardMaterial({
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
 
 player.position.set(0, 1, 0);
-    // Keyboard Input
+
+scene.add(player);
+
+// Keyboard Input
+
 const keys = {};
 
 window.addEventListener("keydown", (event) => {
