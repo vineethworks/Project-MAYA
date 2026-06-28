@@ -57,6 +57,27 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 2);
 sunLight.position.set(5, 10, 5);
 
 scene.add(sunLight);
+// Tree Trunk
+const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.2, 2);
+const trunkMaterial = new THREE.MeshStandardMaterial({
+    color: 0x8B4513
+});
+
+const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+trunk.position.set(0, 1, -3);
+
+scene.add(trunk);
+
+// Tree Leaves
+const leavesGeometry = new THREE.SphereGeometry(1, 32, 32);
+const leavesMaterial = new THREE.MeshStandardMaterial({
+    color: 0x228B22
+});
+
+const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+leaves.position.set(0, 2.5, -3);
+
+scene.add(leaves);
 
 // Camera Position
 camera.position.set(0,5,8);
