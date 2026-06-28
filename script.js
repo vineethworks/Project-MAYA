@@ -36,7 +36,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 // Ground
 const geometry = new THREE.PlaneGeometry(20,20);
-const material = new THREE.MeshBasicMaterial({
+const material = new THREE.MeshStandardMaterial({
     color:0x228B22,
     side:THREE.DoubleSide
 });
@@ -46,6 +46,17 @@ const ground = new THREE.Mesh(geometry,material);
 ground.rotation.x = -Math.PI/2;
 
 scene.add(ground);
+// Ambient Light
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+
+scene.add(ambientLight);
+
+// Sun Light
+const sunLight = new THREE.DirectionalLight(0xffffff, 2);
+
+sunLight.position.set(5, 10, 5);
+
+scene.add(sunLight);
 
 // Camera Position
 camera.position.set(0,5,8);
