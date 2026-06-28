@@ -148,10 +148,25 @@ function animate(){
     requestAnimationFrame(animate);
 const speed = 0.08;
 
-if (keys["w"]) player.position.z -= speed;
-if (keys["s"]) player.position.z += speed;
-if (keys["a"]) player.position.x -= speed;
-if (keys["d"]) player.position.x += speed;
+if (keys["w"]) {
+    player.position.z -= speed;
+    player.rotation.y = 0;
+}
+
+if (keys["s"]) {
+    player.position.z += speed;
+    player.rotation.y = Math.PI;
+}
+
+if (keys["a"]) {
+    player.position.x -= speed;
+    player.rotation.y = Math.PI / 2;
+}
+
+if (keys["d"]) {
+    player.position.x += speed;
+    player.rotation.y = -Math.PI / 2;
+}
     // Camera Follow
 
 camera.position.x = player.position.x;
