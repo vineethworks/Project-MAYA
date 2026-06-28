@@ -152,6 +152,15 @@ if (keys["w"]) player.position.z -= speed;
 if (keys["s"]) player.position.z += speed;
 if (keys["a"]) player.position.x -= speed;
 if (keys["d"]) player.position.x += speed;
+    // Camera Follow
+
+camera.position.x = player.position.x;
+
+camera.position.z = player.position.z + 8;
+
+camera.position.y = player.position.y + 6;
+
+camera.lookAt(player.position);
     renderer.render(scene,camera);
 
 }
