@@ -188,11 +188,22 @@ if (keys["d"]) {
     // 🎥 Smooth Camera Follow
     
 
-camera.position.x += (player.position.x - camera.position.x) * 0.08;
+const distance = 8;
 
-camera.position.y += ((player.position.y + 6) - camera.position.y) * 0.08;
+camera.position.x += (
+    (player.position.x + Math.sin(cameraAngle) * distance) -
+    camera.position.x
+) * 0.08;
 
-camera.position.z += ((player.position.z + 8) - camera.position.z) * 0.08;
+camera.position.z += (
+    (player.position.z + Math.cos(cameraAngle) * distance) -
+    camera.position.z
+) * 0.08;
+
+camera.position.y += (
+    (player.position.y + 6) -
+    camera.position.y
+) * 0.08;
 
 camera.lookAt(player.position);
 // Jump Physics
