@@ -138,7 +138,7 @@ loader.load(
         const maya = gltf.scene;
 mayaCharacter = maya;
         maya.scale.set(1, 1, 1);
-
+maya.rotation.y = Math.PI;
         maya.position.set(0, 0, 0);
 player.visible = false;
         scene.add(maya);
