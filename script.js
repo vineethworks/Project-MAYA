@@ -138,7 +138,11 @@ window.addEventListener("keydown", (event) => {
 window.addEventListener("keyup", (event) => {
     keys[event.key.toLowerCase()] = false;
 });
+let velocityY = 0;
+let isJumping = false;
 
+const gravity = 0.015;
+const jumpForce = 0.28;
 // Camera Position
 camera.position.set(0, 8, 15);
 camera.lookAt(0, 0, 0);
@@ -167,7 +171,12 @@ if (keys["d"]) {
     player.position.x += speed;
     player.rotation.y = -Math.PI / 2;
 }
+    if (event.code === "Space" && !isJumping) {
+    velocityY = jumpForce;
+    isJumping = true;
+}
     // 🎥 Smooth Camera Follow
+    
 
 camera.position.x += (player.position.x - camera.position.x) * 0.08;
 
@@ -176,7 +185,21 @@ camera.position.y += ((player.position.y + 6) - camera.position.y) * 0.08;
 camera.position.z += ((player.position.z + 8) - camera.position.z) * 0.08;
 
 camera.lookAt(player.position);
+// Jump Physics
 
+velocityY -= gravity;
+
+player.position.y += velocityY;
+
+if (player.position.y <= 1) {
+
+    player.position.y = 1;
+
+    velocityY = 0;
+
+    isJumping = false;
+
+}
 renderer.render(scene, camera);
 }
 
