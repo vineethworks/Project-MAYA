@@ -123,6 +123,16 @@ const playerMaterial = new THREE.MeshStandardMaterial({
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
 
 player.position.set(0, 1, 0);
+    // Keyboard Input
+const keys = {};
+
+window.addEventListener("keydown", (event) => {
+    keys[event.key.toLowerCase()] = true;
+});
+
+window.addEventListener("keyup", (event) => {
+    keys[event.key.toLowerCase()] = false;
+});
 
 scene.add(player);
 
@@ -134,7 +144,12 @@ camera.lookAt(0, 0, 0);
 function animate(){
 
     requestAnimationFrame(animate);
+const speed = 0.08;
 
+if (keys["w"]) player.position.z -= speed;
+if (keys["s"]) player.position.z += speed;
+if (keys["a"]) player.position.x -= speed;
+if (keys["d"]) player.position.x += speed;
     renderer.render(scene,camera);
 
 }
