@@ -68,17 +68,37 @@ trunk.position.set(0, 1, -3);
 
 scene.add(trunk);
 
-// Tree Leaves
-const leavesGeometry = new THREE.SphereGeometry(1, 32, 32);
-const leavesMaterial = new THREE.MeshStandardMaterial({
-    color: 0x228B22
-});
+// 🌳 Create Forest
+for (let i = 0; i < 20; i++) {
 
-const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-leaves.position.set(0, 2.5, -3);
+    // Tree Trunk
+    const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.2, 2);
+    const trunkMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8B4513
+    });
 
-scene.add(leaves);
+    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
 
+    const x = (Math.random() - 0.5) * 18;
+    const z = (Math.random() - 0.5) * 18;
+
+    trunk.position.set(x, 1, z);
+
+    scene.add(trunk);
+
+    // Leaves
+    const leavesGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const leavesMaterial = new THREE.MeshStandardMaterial({
+        color: 0x228B22
+    });
+
+    const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+
+    leaves.position.set(x, 2.5, z);
+
+    scene.add(leaves);
+
+}
 // Camera Position
 camera.position.set(0,5,8);
 
