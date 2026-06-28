@@ -252,6 +252,11 @@ if (mayaCharacter) {
     mayaCharacter.position.copy(player.position);
 
 }
+    if (mayaCharacter) {
+
+    mayaCharacter.rotation.y = player.rotation.y;
+
+}
 if (player.position.y <= 1) {
 
     player.position.y = 1;
