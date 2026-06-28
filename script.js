@@ -34,6 +34,9 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
+// Enable soft shadows (moderate settings for browser performance)
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 // Add a clock for frame-rate independent movement
 const clock = new THREE.Clock();
@@ -48,17 +51,34 @@ const material = new THREE.MeshStandardMaterial({
 const ground = new THREE.Mesh(geometry,material);
 
 ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true; // receive shadows from sun and trees
 
 scene.add(ground);
-// Ambient Light
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-
+// Soft ambient illumination using HemisphereLight
+const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x443322, 0.55); // soft sky / ground colors
+scene.add(hemiLight);
+// Subtle fill ambient to keep characters visible in deep shade
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
 scene.add(ambientLight);
 
-// Sun Light
-const sunLight = new THREE.DirectionalLight(0xffffff, 2);
+// Sun Light (directional) - warm color and caster of soft shadows
+const sunLight = new THREE.DirectionalLight(0xfff0c8, 1.6);
 
 sunLight.position.set(5, 10, 5);
+sunLight.castShadow = true;
+// Shadow map resolution (1024 keeps quality reasonable in browser)
+sunLight.shadow.mapSize.width = 1024;
+sunLight.shadow.mapSize.height = 1024;
+// Tweak camera bounds for the directional light (orthographic) to cover the visible world
+const d = 15;
+sunLight.shadow.camera.left = -d;
+sunLight.shadow.camera.right = d;
+sunLight.shadow.camera.top = d;
+sunLight.shadow.camera.bottom = -d;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 50;
+// Softness
+if (sunLight.shadow.radius !== undefined) sunLight.shadow.radius = 4;
 
 scene.add(sunLight);
 const trees = [];
@@ -77,6 +97,8 @@ for (let i = 0; i < 20; i++) {
     const z = (Math.random() - 0.5) * 18;
 
     trunk.position.set(x, 1, z);
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
 scene.add(trunk);
     trees.push(trunk);
 
@@ -89,6 +111,8 @@ scene.add(trunk);
     const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
 
     leaves.position.set(x, 2.5, z);
+    leaves.castShadow = true;
+    leaves.receiveShadow = true;
 scene.add(leaves);
     trees.push(leaves);
 
@@ -114,7 +138,8 @@ for (let i = 0; i < 15; i++) {
         0.25,
         (Math.random() - 0.5) * 18
     );
-
+    rock.castShadow = true;
+    rock.receiveShadow = true;
     scene.add(rock);} 
 
 // 👤 Temporary Player
@@ -128,7 +153,8 @@ const playerMaterial = new THREE.MeshStandardMaterial({
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
 
 player.position.set(0, 1, 0);
-
+player.castShadow = true;
+player.receiveShadow = true;
 scene.add(player);
 const loader = new GLTFLoader();
 let mayaCharacter = null;
@@ -152,6 +178,13 @@ mayaCharacter = maya;
         maya.scale.set(1, 1, 1);
 maya.rotation.y = Math.PI;
         maya.position.set(0, 0, 0);
+// Ensure character meshes cast and receive shadows
+maya.traverse((child) => {
+    if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+    }
+});
 player.visible = false;
         scene.add(maya);
 
