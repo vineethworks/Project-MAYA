@@ -138,8 +138,8 @@ loader.load(
 
         maya.scale.set(1, 1, 1);
 
-        maya.position.set(0, 1, 0);
-
+        maya.position.set(0, 0, 0);
+player.visible = false;
         scene.add(maya);
 
     },
