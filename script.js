@@ -189,7 +189,11 @@ if (keys["d"]) {
     player.position.x += speed;
     player.rotation.y = -Math.PI / 2;
 }
+// 🌍 World Boundary
 
+player.position.x = Math.max(-9, Math.min(9, player.position.x));
+
+player.position.z = Math.max(-9, Math.min(9, player.position.z));
     // 🎥 Smooth Camera Follow
     
 
