@@ -128,7 +128,8 @@ player.position.set(0, 1, 0);
 
 scene.add(player);
 const loader = new GLTFLoader();
-let mayaCharacter;
+let mayaCharacter = null;
+let mixer = null;
 loader.load(
 
     "assets/models/maya.glb",
@@ -137,6 +138,14 @@ loader.load(
 
         const maya = gltf.scene;
 mayaCharacter = maya;
+        mixer = new THREE.AnimationMixer(mayaCharacter);
+        if (gltf.animations.length > 0) {
+
+    const action = mixer.clipAction(gltf.animations[0]);
+
+    action.play();
+
+}
         maya.scale.set(1, 1, 1);
 maya.rotation.y = Math.PI;
         maya.position.set(0, 0, 0);
