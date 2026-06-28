@@ -206,7 +206,7 @@ camera.position.z += (
 ) * 0.08;
 
 camera.position.y += (
-    (player.position.y + 6) -
+    (player.position.y + 6 + cameraPitch * 5) -
     camera.position.y
 ) * 0.08;
 
