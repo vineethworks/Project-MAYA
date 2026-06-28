@@ -155,6 +155,7 @@ function animate(){
 
     requestAnimationFrame(animate);
 const speed = keys["shift"] ? 0.16 : 0.08;
+    console.log(speed);
 
 if (keys["w"]) {
     player.position.z -= speed;
