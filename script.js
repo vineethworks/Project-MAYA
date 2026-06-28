@@ -154,7 +154,7 @@ camera.lookAt(0, 0, 0);
 function animate(){
 
     requestAnimationFrame(animate);
-const speed = 0.08;
+const speed = keys["shift"] ? 0.16 : 0.08;
 
 if (keys["w"]) {
     player.position.z -= speed;
