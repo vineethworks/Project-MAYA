@@ -111,8 +111,8 @@ for (let i = 0; i < 15; i++) {
         (Math.random() - 0.5) * 18
     );
 
-    scene.add(rock);
-}
+    scene.add(rock);}
+
 // 👤 Temporary Player
 
 const playerGeometry = new THREE.CapsuleGeometry(0.4, 1.2, 8, 16);
@@ -139,9 +139,6 @@ window.addEventListener("keyup", (event) => {
     keys[event.key.toLowerCase()] = false;
 });
 
-scene.add(player);
-
-}
 // Camera Position
 camera.position.set(0, 8, 15);
 camera.lookAt(0, 0, 0);
