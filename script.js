@@ -133,6 +133,10 @@ const keys = {};
 
 window.addEventListener("keydown", (event) => {
     keys[event.key.toLowerCase()] = true;
+    if (event.code === "Space" && !isJumping) {
+    velocityY = jumpForce;
+    isJumping = true;
+}
 });
 
 window.addEventListener("keyup", (event) => {
@@ -171,10 +175,7 @@ if (keys["d"]) {
     player.position.x += speed;
     player.rotation.y = -Math.PI / 2;
 }
-    if (event.code === "Space" && !isJumping) {
-    velocityY = jumpForce;
-    isJumping = true;
-}
+
     // 🎥 Smooth Camera Follow
     
 
